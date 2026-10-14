@@ -3,6 +3,12 @@
 #include <cstdlib>
 #include <ctime>
 
+using namespace std;
+
+// ========================
+// STRUCTURES
+// ========================
+
 struct Hero {
     char nom;
     int position_x;
@@ -18,184 +24,451 @@ struct Enemy {
     bool vivant;
 };
 
-int main() {
-    bool game = true;
+// ========================
+// VARIABLES GLOBALES
+// ========================
 
-    const int map_size_x = 20;
-    const int map_size_y = 10;
-    const int enemy_count = 5;
+const int map_size_x = 20;
+const int map_size_y = 10;
+const int enemy_count = 5;
 
-    srand(time(0));
+const int SOL = 0;
+const int MONTAGNE = 1;
+const int EAU = 2;
 
-    Hero H{ 'H', 0, 4, 3, 'd' };
+bool game = true;
+bool victoire = false;
 
-    char map[map_size_x * map_size_y];
+Hero H = { 'H', 0, 5, 3, 'd' };
 
-    // Initialisation de la carte
+// Position de la sortie
+int sortie_x = 19;
+int sortie_y = 9;
+
+// Carte
+int map[map_size_x * map_size_y] = {};
+
+// Ennemis
+Enemy enemies[enemy_count] = {
+    { 'X', 2, 2, true },
+    { 'X', 13, 2, true },
+    { 'X', 11, 7, true },
+    { 'X', 8, 8, true },
+    { 'X', 16, 8, true }
+};
+
+// ========================
+// INITIALISER LA CARTE
+// ========================
+
+void initialiserCarte() {
+
+    // Remplir la carte avec du sol
     for (int i = 0; i < map_size_x * map_size_y; i++) {
-        map[i] = '.';
+        map[i] = SOL;
     }
 
-    // Ajout de l'eau
-    map[3 + 2 * map_size_x] = '~';
-    map[4 + 2 * map_size_x] = '~';
-    map[5 + 2 * map_size_x] = '~';
+    // Montagnes
+    for (int x = 7; x < 12; x++) {
+        for (int y = 0; y < 2; y++) {
+            map[y * map_size_x + x] = MONTAGNE;
+        }
+    }
 
-    map[10 + 4 * map_size_x] = '~';
-    map[11 + 4 * map_size_x] = '~';
+    for (int x = 10; x < 12; x++) {
+        for (int y = 2; y < 5; y++) {
+            map[y * map_size_x + x] = MONTAGNE;
+        }
+    }
 
-    // Ajout des montagnes
-    map[8 + 1 * map_size_x] = 'A';
-    map[8 + 2 * map_size_x] = 'A';
-    map[8 + 3 * map_size_x] = 'A';
+    for (int x = 16; x < 19; x++) {
+        for (int y = 0; y < 2; y++) {
+            map[y * map_size_x + x] = MONTAGNE;
+        }
+    }
 
-    map[15 + 6 * map_size_x] = 'A';
-    map[16 + 6 * map_size_x] = 'A';
+    // Eau
+    for (int x = 2; x < 5; x++) {
+        for (int y = 6; y < 9; y++) {
+            map[y * map_size_x + x] = EAU;
+        }
+    }
 
-    // Creation des cinq ennemis immobiles
-    Enemy enemies[enemy_count] = {
-        { 'X', 2, 2, true },
-        { 'X', 11, 4, true },
-        { 'X', 11, 6, true },
-        { 'X', 8, 8, true },
-        { 'X', 16, 8, true }
-    };
+    for (int x = 15; x < 18; x++) {
+        for (int y = 1; y < 4; y++) {
+            map[y * map_size_x + x] = EAU;
+        }
+    }
 
-    // Boucle principale du jeu
-    while (game) {
+    for (int x = 7; x < 10; x++) {
+        for (int y = 2; y < 5; y++) {
+            map[y * map_size_x + x] = EAU;
+        }
+    }
 
-        // Affichage de la carte
-        system("cls");
+    // Montagne supplementaire
+    map[7 * map_size_x + 3] = MONTAGNE;
+}
 
-        for (int y = 0; y < map_size_y; y++) {
-            for (int x = 0; x < map_size_x; x++) {
+// ========================
+// AFFICHER LA CARTE
+// ========================
 
-                if (x == H.position_x && y == H.position_y) {
-                    std::cout << H.nom << ' ';
+void afficherCarte() {
+
+    system("cls");
+
+    for (int y = 0; y < map_size_y; y++) {
+
+        for (int x = 0; x < map_size_x; x++) {
+
+            // Afficher le heros
+            if (x == H.position_x && y == H.position_y) {
+                cout << H.nom << ' ';
+            }
+            else {
+
+                bool ennemiTrouve = false;
+
+                // Rechercher un ennemi
+                for (int i = 0; i < enemy_count; i++) {
+
+                    if (enemies[i].vivant &&
+                        x == enemies[i].position_x &&
+                        y == enemies[i].position_y) {
+
+                        cout << enemies[i].nom << ' ';
+                        ennemiTrouve = true;
+                        break;
+                    }
                 }
-                else {
-                    bool enemy_found = false;
 
-                    for (int i = 0; i < enemy_count; i++) {
-                        if (enemies[i].vivant &&
-                            x == enemies[i].position_x &&
-                            y == enemies[i].position_y) {
+                // Afficher la sortie ou le terrain
+                if (!ennemiTrouve) {
 
-                            std::cout << enemies[i].nom << ' ';
-                            enemy_found = true;
-                            break;
+                    if (x == sortie_x && y == sortie_y) {
+                        cout << "E ";
+                    }
+                    else {
+
+                        int terrain = map[y * map_size_x + x];
+
+                        if (terrain == SOL) {
+                            cout << ". ";
+                        }
+                        else if (terrain == MONTAGNE) {
+                            cout << "A ";
+                        }
+                        else if (terrain == EAU) {
+                            cout << "~ ";
                         }
                     }
-
-                    if (!enemy_found) {
-                        std::cout << map[x + y * map_size_x] << ' ';
-                    }
-                }
-            }
-
-            std::cout << '\n';
-        }
-
-        // Affichage des informations
-        int ennemis_restants = 0;
-
-        for (int i = 0; i < enemy_count; i++) {
-            if (enemies[i].vivant) {
-                ennemis_restants++;
-            }
-        }
-
-        std::cout << "\nVies : " << H.vies << '\n';
-        std::cout << "Ennemis restants : "
-            << ennemis_restants << '\n';
-
-        std::cout << "\nZ = Haut | S = Bas\n";
-        std::cout << "Q = Gauche | D = Droite\n";
-
-        // Lecture d'une touche sans appuyer sur Entree
-        char touche = _getch();
-
-        // Conversion des majuscules en minuscules
-        if (touche >= 'A' && touche <= 'Z') {
-            touche = touche + ('a' - 'A');
-        }
-
-        // Variables pour le deplacement du heros
-        int next_x = H.position_x;
-        int next_y = H.position_y;
-
-        bool action_valide = false;
-
-        // Deplacement du heros
-        if (touche == 'z' || touche == 'q' ||
-            touche == 's' || touche == 'd') {
-
-            action_valide = true;
-
-            if (touche == 'z') {
-                next_y--;
-            }
-            else if (touche == 's') {
-                next_y++;
-            }
-            else if (touche == 'q') {
-                next_x--;
-            }
-            else if (touche == 'd') {
-                next_x++;
-            }
-
-            // Passage d'un bord a l'autre de la carte
-            next_x = (next_x + map_size_x) % map_size_x;
-            next_y = (next_y + map_size_y) % map_size_y;
-
-            int next_index = next_x + next_y * map_size_x;
-
-            // Verification du terrain
-            if (map[next_index] != 'A' &&
-                map[next_index] != '~') {
-
-                H.position_x = next_x;
-                H.position_y = next_y;
-            }
-
-            // Collision avec un ennemi immobile
-            for (int i = 0; i < enemy_count; i++) {
-
-                if (enemies[i].vivant &&
-                    H.position_x == enemies[i].position_x &&
-                    H.position_y == enemies[i].position_y) {
-
-                    H.vies--;
-                    game = false;
-                    break;
                 }
             }
         }
 
-        // Ignorer les touches non reconnues
-        if (!action_valide) {
-            continue;
-        }
+        cout << endl;
+    }
+}
 
-        // Verification : le heros a-t-il encore une vie ?
-        if (!game) {
+// ========================
+// AFFICHER LES INFORMATIONS
+// ========================
+
+void afficherInformations() {
+
+    int ennemisRestants = 0;
+
+    for (int i = 0; i < enemy_count; i++) {
+        if (enemies[i].vivant) {
+            ennemisRestants++;
+        }
+    }
+
+    cout << "\nVies : " << H.vies << endl;
+    cout << "Ennemis restants : " << ennemisRestants << endl;
+
+    cout << "\nZ = Haut | S = Bas" << endl;
+    cout << "Q = Gauche | D = Droite" << endl;
+    cout << "E = Sortie" << endl;
+    cout << "Echap = Quitter" << endl;
+}
+
+// ========================
+// VERIFIER LES COLLISIONS
+// ========================
+
+void verifierCollisions() {
+
+    for (int i = 0; i < enemy_count; i++) {
+
+        if (enemies[i].vivant &&
+            H.position_x == enemies[i].position_x &&
+            H.position_y == enemies[i].position_y) {
+
+            H.vies--;
+
+            if (H.vies < 0) {
+                H.vies = 0;
+            }
+
+            if (H.vies == 0) {
+                game = false;
+            }
+
+            // Une seule collision par verification
             break;
         }
     }
+}
 
-    
+// ========================
+// DEPLACER LE HEROS
+// ========================
+
+void deplacerHero(char touche) {
+
+    int next_x = H.position_x;
+    int next_y = H.position_y;
+
+    // Choisir la direction
+    if (touche == 'z') {
+        next_y--;
+    }
+    else if (touche == 's') {
+        next_y++;
+    }
+    else if (touche == 'q') {
+        next_x--;
+    }
+    else if (touche == 'd') {
+        next_x++;
+    }
+    else {
+        return;
+    }
+
+    // Verifier les limites
+    if (next_x < 0 || next_x >= map_size_x ||
+        next_y < 0 || next_y >= map_size_y) {
+        return;
+    }
+
+    // Verifier le terrain
+    int index = next_y * map_size_x + next_x;
+
+    if (map[index] == MONTAGNE || map[index] == EAU) {
+        return;
+    }
+
+    // Deplacer le heros
+    H.position_x = next_x;
+    H.position_y = next_y;
+}
+
+// ========================
+// DEPLACER LES ENNEMIS
+// ========================
+
+void deplacerEnnemis() {
+
+    for (int i = 0; i < enemy_count; i++) {
+
+        // Ignorer les ennemis morts
+        if (!enemies[i].vivant) {
+            continue;
+        }
+
+        // Position possible
+        int next_x = enemies[i].position_x;
+        int next_y = enemies[i].position_y;
+
+        // Choisir une direction au hasard
+        int direction = rand() % 4;
+
+        if (direction == 0) {
+            next_y--; // Haut
+        }
+        else if (direction == 1) {
+            next_y++; // Bas
+        }
+        else if (direction == 2) {
+            next_x--; // Gauche
+        }
+        else {
+            next_x++; // Droite
+        }
+
+        // Verifier les limites de la carte
+        if (next_x < 0 || next_x >= map_size_x ||
+            next_y < 0 || next_y >= map_size_y) {
+            continue;
+        }
+
+        // Verifier les obstacles
+        int index = next_y * map_size_x + next_x;
+
+        if (map[index] == MONTAGNE || map[index] == EAU) {
+            continue;
+        }
+
+        // Les ennemis ne peuvent pas aller sur la sortie
+        if (next_x == sortie_x && next_y == sortie_y) {
+            continue;
+        }
+
+        // Verifier si un autre ennemi occupe la case
+        bool caseOccupee = false;
+
+        for (int j = 0; j < enemy_count; j++) {
+
+            if (i != j &&
+                enemies[j].vivant &&
+                next_x == enemies[j].position_x &&
+                next_y == enemies[j].position_y) {
+
+                caseOccupee = true;
+                break;
+            }
+        }
+
+        // Si la case est occupee, ne pas bouger
+        if (caseOccupee) {
+            continue;
+        }
+
+        // Appliquer le deplacement
+        enemies[i].position_x = next_x;
+        enemies[i].position_y = next_y;
+    }
+}
+
+// ========================
+// LIRE LES TOUCHES
+// ========================
+
+void lireTouche() {
+
+    char touche = _getch();
+
+    // Quitter avec Echap
+    if (touche == 27) {
+        game = false;
+        return;
+    }
+
+    // Convertir les majuscules en minuscules
+    if (touche >= 'A' && touche <= 'Z') {
+        touche = touche + ('a' - 'A');
+    }
+
+    // Seules les touches Z, Q, S et D sont autorisees
+    if (touche != 'z' && touche != 'q' &&
+        touche != 's' && touche != 'd') {
+        return;
+    }
+
+    // Tour du heros
+    deplacerHero(touche);
+
+    // Verifier les collisions apres le mouvement du heros
+    verifierCollisions();
+
+    if (!game) {
+        return;
+    }
+
+    // Verifier si le heros atteint la sortie
+    if (H.position_x == sortie_x &&
+        H.position_y == sortie_y) {
+
+        victoire = true;
+        game = false;
+        return;
+    }
+
+    // Tour des ennemis
+    deplacerEnnemis();
+
+    // Verifier les collisions apres le mouvement des ennemis
+    verifierCollisions();
+
+    // Verifier si le heros est sur la sortie
+    if (game &&
+        H.position_x == sortie_x &&
+        H.position_y == sortie_y) {
+
+        victoire = true;
+        game = false;
+    }
+}
+
+// ========================
+// AFFICHER LA FIN DU JEU
+// ========================
+
+void afficherFinJeu() {
+
     system("cls");
 
-    std::cout << "========================\n";
-    std::cout << "       GAME OVER        \n";
-    std::cout << "========================\n\n";
+    if (victoire) {
 
-    std::cout << "Le heros a perdu sa vie !\n";
-    std::cout << "Vies restantes : " << H.vies << '\n';
+        cout << "========================" << endl;
+        cout << "       VICTOIRE !       " << endl;
+        cout << "========================" << endl;
 
-    std::cout << "\nAppuie sur une touche pour fermer...";
+        cout << "\nTu as atteint la sortie !" << endl;
+    }
+    else if (H.vies <= 0) {
+
+        cout << "========================" << endl;
+        cout << "       GAME OVER        " << endl;
+        cout << "========================" << endl;
+
+        cout << "\nLe heros a perdu toutes ses vies !" << endl;
+        cout << "Vies restantes : " << H.vies << endl;
+    }
+    else {
+
+        cout << "Tu as quitte la partie." << endl;
+    }
+
+    cout << "\nAppuie sur une touche pour fermer...";
     _getch();
+}
+
+// ========================
+// LANCER LE JEU
+// ========================
+
+void lancerJeu() {
+
+    // Initialiser le hasard
+    srand((unsigned int)time(0));
+
+    // Initialiser la carte
+    initialiserCarte();
+
+    // Boucle principale
+    while (game) {
+
+        afficherCarte();
+
+        afficherInformations();
+
+        lireTouche();
+    }
+
+    afficherFinJeu();
+}
+
+// ========================
+// MAIN
+// ========================
+
+int main() {
+
+    lancerJeu();
 
     return 0;
 }
