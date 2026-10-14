@@ -27,7 +27,7 @@ int main() {
 
     srand(time(0));
 
-    Hero H{ 'H', 0, 4, 1, 'd' };
+    Hero H{ 'H', 0, 4, 3, 'd' };
 
     char map[map_size_x * map_size_y];
 
@@ -184,7 +184,7 @@ int main() {
         }
     }
 
-    // Ecran de Game Over
+    
     system("cls");
 
     std::cout << "========================\n";
