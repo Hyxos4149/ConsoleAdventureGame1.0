@@ -43,12 +43,12 @@ Hero H = { 'H', 0, 5, 3, 'd' };
 
 // Position de la sortie
 int sortie_x = 19;
-int sortie_y = 9;
+int sortie_y = 0;
 
 // Carte
 int map[map_size_x * map_size_y] = {};
 
-// Ennemis
+// Ennemis immobiles
 Enemy enemies[enemy_count] = {
     { 'X', 2, 2, true },
     { 'X', 13, 2, true },
@@ -130,7 +130,7 @@ void afficherCarte() {
 
                 bool ennemiTrouve = false;
 
-                // Rechercher un ennemi
+                // Afficher les ennemis immobiles
                 for (int i = 0; i < enemy_count; i++) {
 
                     if (enemies[i].vivant &&
@@ -267,83 +267,6 @@ void deplacerHero(char touche) {
 }
 
 // ========================
-// DEPLACER LES ENNEMIS
-// ========================
-
-void deplacerEnnemis() {
-
-    for (int i = 0; i < enemy_count; i++) {
-
-        // Ignorer les ennemis morts
-        if (!enemies[i].vivant) {
-            continue;
-        }
-
-        // Position possible
-        int next_x = enemies[i].position_x;
-        int next_y = enemies[i].position_y;
-
-        // Choisir une direction au hasard
-        int direction = rand() % 4;
-
-        if (direction == 0) {
-            next_y--; // Haut
-        }
-        else if (direction == 1) {
-            next_y++; // Bas
-        }
-        else if (direction == 2) {
-            next_x--; // Gauche
-        }
-        else {
-            next_x++; // Droite
-        }
-
-        // Verifier les limites de la carte
-        if (next_x < 0 || next_x >= map_size_x ||
-            next_y < 0 || next_y >= map_size_y) {
-            continue;
-        }
-
-        // Verifier les obstacles
-        int index = next_y * map_size_x + next_x;
-
-        if (map[index] == MONTAGNE || map[index] == EAU) {
-            continue;
-        }
-
-        // Les ennemis ne peuvent pas aller sur la sortie
-        if (next_x == sortie_x && next_y == sortie_y) {
-            continue;
-        }
-
-        // Verifier si un autre ennemi occupe la case
-        bool caseOccupee = false;
-
-        for (int j = 0; j < enemy_count; j++) {
-
-            if (i != j &&
-                enemies[j].vivant &&
-                next_x == enemies[j].position_x &&
-                next_y == enemies[j].position_y) {
-
-                caseOccupee = true;
-                break;
-            }
-        }
-
-        // Si la case est occupee, ne pas bouger
-        if (caseOccupee) {
-            continue;
-        }
-
-        // Appliquer le deplacement
-        enemies[i].position_x = next_x;
-        enemies[i].position_y = next_y;
-    }
-}
-
-// ========================
 // LIRE LES TOUCHES
 // ========================
 
@@ -371,7 +294,7 @@ void lireTouche() {
     // Tour du heros
     deplacerHero(touche);
 
-    // Verifier les collisions apres le mouvement du heros
+    // Verifier les collisions avec les ennemis immobiles
     verifierCollisions();
 
     if (!game) {
@@ -385,21 +308,6 @@ void lireTouche() {
         victoire = true;
         game = false;
         return;
-    }
-
-    // Tour des ennemis
-    deplacerEnnemis();
-
-    // Verifier les collisions apres le mouvement des ennemis
-    verifierCollisions();
-
-    // Verifier si le heros est sur la sortie
-    if (game &&
-        H.position_x == sortie_x &&
-        H.position_y == sortie_y) {
-
-        victoire = true;
-        game = false;
     }
 }
 
@@ -442,9 +350,6 @@ void afficherFinJeu() {
 // ========================
 
 void lancerJeu() {
-
-    // Initialiser le hasard
-    srand((unsigned int)time(0));
 
     // Initialiser la carte
     initialiserCarte();
