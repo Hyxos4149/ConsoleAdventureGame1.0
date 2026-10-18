@@ -2,6 +2,8 @@
 #include <conio.h>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
+#include <vector>
 
 using namespace std;
 
@@ -263,6 +265,24 @@ void afficherCarte2() {
 
         cout << endl;
     }
+}
+
+int afficherCarte(string Carte) {
+
+    std::ifstream fichier("config/Cartes/" + Carte + ".txt");
+
+    if (!fichier.is_open()) {
+        std::cerr << "Erreur : impossible d'ouvrir le fichier." << std::endl;
+        return 1;
+    }
+
+    std::string ligne;
+    while (std::getline(fichier, ligne)) {
+        std::cout << ligne << std::endl;
+    }
+
+    fichier.close();
+
 }
 
 // ========================
@@ -552,20 +572,37 @@ void lancerJeu() {
     // Initialiser le hasard
     srand((unsigned int)time(0));
 
-    // Initialiser la carte
-    initialiserCarte1();
-
-    // Boucle principale
-    while (game) {
-
-        afficherCarte1();
-
-        afficherInformations();
-
-        lireTouche();
+    std::vector<std::vector<string>> Niv;
+    std::ifstream fichier("config/Niveaux.txt");
+    
+    int nbLignes = 0;
+    std::string ligne;
+    while (std::getline(fichier, ligne)) {
+        
+        //pour chaque ligne faire un split sur la virgule et garder le tableau dans niv 
+        nbLignes++;
     }
 
-    afficherFinJeu();
+    for (int i = 0; i < nbLignes; i++) {
+        game = true;
+
+        // Initialiser la carte
+        //initialiserCarte1();
+
+        // Boucle principale
+        while (game) {
+
+            afficherCarte(Niv[i][1]);
+
+            afficherInformations();
+
+            lireTouche();
+        }
+
+        afficherFinJeu();
+    }
+
+
 
 
 }
