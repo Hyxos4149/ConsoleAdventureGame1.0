@@ -2,8 +2,6 @@
 #include <conio.h>
 #include <cstdlib>
 #include <ctime>
-#include <fstream>
-#include <vector>
 
 using namespace std;
 
@@ -40,6 +38,9 @@ const int EAU = 2;
 
 bool game = true;
 bool victoire = false;
+
+int niveau = 1;               // NOUVEAU : niveau actuel
+bool niveauTermine = false;   // NOUVEAU : vrai quand le heros touche E
 
 Hero H = { 'H', 0, 5, 3, 'd' };
 
@@ -267,24 +268,6 @@ void afficherCarte2() {
     }
 }
 
-int afficherCarte(string Carte) {
-
-    std::ifstream fichier("config/Cartes/" + Carte + ".txt");
-
-    if (!fichier.is_open()) {
-        std::cerr << "Erreur : impossible d'ouvrir le fichier." << std::endl;
-        return 1;
-    }
-
-    std::string ligne;
-    while (std::getline(fichier, ligne)) {
-        std::cout << ligne << std::endl;
-    }
-
-    fichier.close();
-
-}
-
 // ========================
 // AFFICHER LES INFORMATIONS
 // ========================
@@ -299,7 +282,8 @@ void afficherInformations() {
         }
     }
 
-    cout << "\nVies : " << H.vies << endl;
+    cout << "\nNiveau : " << niveau << endl;   // NOUVEAU
+    cout << "Vies : " << H.vies << endl;
     cout << "Ennemis restants : " << ennemisRestants << endl;
 
     cout << "\nZ = Haut | S = Bas" << endl;
@@ -322,6 +306,8 @@ void verifierCollisions() {
 
             H.vies--;
 
+            enemies[i].vivant = false;
+
             if (H.vies < 0) {
                 H.vies = 0;
             }
@@ -335,7 +321,6 @@ void verifierCollisions() {
         }
     }
 }
-
 // ========================
 // DEPLACER LE HEROS
 // ========================
@@ -496,8 +481,7 @@ void lireTouche() {
     if (H.position_x == sortie_x &&
         H.position_y == sortie_y) {
 
-        victoire = true;
-        game = false;
+        niveauTermine = true;   // MODIFIE : on ne touche plus a game
         return;
     }
 
@@ -512,8 +496,7 @@ void lireTouche() {
         H.position_x == sortie_x &&
         H.position_y == sortie_y) {
 
-        victoire = true;
-        game = false;
+        niveauTermine = true;   // MODIFIE
     }
 }
 
@@ -531,7 +514,7 @@ void afficherFinJeu() {
         cout << "       VICTOIRE !       " << endl;
         cout << "========================" << endl;
 
-        cout << "\nTu as atteint la sortie !" << endl;
+        cout << "\nTu as termine le jeu !" << endl;
     }
     else if (H.vies <= 0) {
 
@@ -551,17 +534,47 @@ void afficherFinJeu() {
     _getch();
 }
 
-/*void niveauFini() {
+// ========================
+// CHANGER DE NIVEAU
+// ========================
 
-    if (afficherFinJeu){
-        if (victoire) {
-            int afficheCarte2();
-            int initialiserCarte2();
+// NOUVEAU : ecran de victoire entre les niveaux
+void afficherVictoireNiveau() {
 
-        }
-    }
+    system("cls");
 
-}*/
+    cout << "========================" << endl;
+    cout << "       VICTOIRE !       " << endl;
+    cout << "========================" << endl;
+
+    cout << "\nNiveau " << niveau << " termine !" << endl;
+    cout << "\nAppuie sur une touche pour continuer...";
+
+    _getch();
+}
+
+// MODIFIE : prepare le niveau 2
+void changeurDelevel() {
+
+    afficherVictoireNiveau();
+
+    niveau = 2;
+    niveauTermine = false;
+
+    // Charger la carte 2
+    initialiserCarte2();
+
+    // Replacer le heros
+    H.position_x = 0;
+    H.position_y = 5;
+
+    // Replacer les ennemis
+    enemies[0] = { 'X', 2, 2, true };
+    enemies[1] = { 'X', 13, 2, true };
+    enemies[2] = { 'X', 11, 7, true };
+    enemies[3] = { 'X', 8, 8, true };
+    enemies[4] = { 'X', 16, 8, true };
+}
 
 // ========================
 // LANCER LE JEU
@@ -572,39 +585,38 @@ void lancerJeu() {
     // Initialiser le hasard
     srand((unsigned int)time(0));
 
-    std::vector<std::vector<string>> Niv;
-    std::ifstream fichier("config/Niveaux.txt");
-    
-    int nbLignes = 0;
-    std::string ligne;
-    while (std::getline(fichier, ligne)) {
-        
-        //pour chaque ligne faire un split sur la virgule et garder le tableau dans niv 
-        nbLignes++;
-    }
+    // Initialiser la carte
+    initialiserCarte1();
 
-    for (int i = 0; i < nbLignes; i++) {
-        game = true;
+    // Boucle principale
+    while (game) {
 
-        // Initialiser la carte
-        //initialiserCarte1();
-
-        // Boucle principale
-        while (game) {
-
-            afficherCarte(Niv[i][1]);
-
-            afficherInformations();
-
-            lireTouche();
+        // MODIFIE : afficher la bonne carte selon le niveau
+        if (niveau == 1) {
+            afficherCarte1();
+        }
+        else {
+            afficherCarte2();
         }
 
-        afficherFinJeu();
+        afficherInformations();
+
+        lireTouche();
+
+        // NOUVEAU : si le heros a touche la sortie
+        if (niveauTermine) {
+
+            if (niveau == 1) {
+                changeurDelevel();   // passer au niveau 2
+            }
+            else {
+                victoire = true;     // fin du jeu
+                game = false;
+            }
+        }
     }
 
-
-
-
+    afficherFinJeu();
 }
 
 // ========================
