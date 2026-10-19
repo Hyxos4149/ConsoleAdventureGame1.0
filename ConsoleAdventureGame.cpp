@@ -39,8 +39,8 @@ const int EAU = 2;
 bool game = true;
 bool victoire = false;
 
-int niveau = 1;               // NOUVEAU : niveau actuel
-bool niveauTermine = false;   // NOUVEAU : vrai quand le heros touche E
+int niveau = 1;               
+bool niveauTermine = false;   
 
 Hero H = { 'H', 0, 5, 3, 'd' };
 
