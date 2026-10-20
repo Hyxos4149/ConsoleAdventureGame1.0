@@ -1,7 +1,8 @@
 #include <iostream>
 #include <conio.h>
 #include <cstdlib>
-#include <ctime>
+#include <ctime> 
+#include <curses.h>
 
 using namespace std;
 
@@ -39,8 +40,8 @@ const int EAU = 2;
 bool game = true;
 bool victoire = false;
 
-int niveau = 1;               
-bool niveauTermine = false;   
+int niveau = 1;
+bool niveauTermine = false;
 
 Hero H = { 'H', 0, 5, 3, 'd' };
 
@@ -155,63 +156,6 @@ void initialiserCarte2() {
 // ========================
 
 void afficherCarte1() {
-
-    system("cls");
-
-    for (int y = 0; y < map_size_y; y++) {
-
-        for (int x = 0; x < map_size_x; x++) {
-
-            // Afficher le heros
-            if (x == H.position_x && y == H.position_y) {
-                cout << H.nom << ' ';
-            }
-            else {
-
-                bool ennemiTrouve = false;
-
-                // Rechercher un ennemi
-                for (int i = 0; i < enemy_count; i++) {
-
-                    if (enemies[i].vivant &&
-                        x == enemies[i].position_x &&
-                        y == enemies[i].position_y) {
-
-                        cout << enemies[i].nom << ' ';
-                        ennemiTrouve = true;
-                        break;
-                    }
-                }
-
-                // Afficher la sortie ou le terrain
-                if (!ennemiTrouve) {
-
-                    if (x == sortie_x && y == sortie_y) {
-                        cout << "E ";
-                    }
-                    else {
-
-                        int terrain = map[y * map_size_x + x];
-
-                        if (terrain == SOL) {
-                            cout << ". ";
-                        }
-                        else if (terrain == MONTAGNE) {
-                            cout << "A ";
-                        }
-                        else if (terrain == EAU) {
-                            cout << "~ ";
-                        }
-                    }
-                }
-            }
-        }
-
-        cout << endl;
-    }
-}
-
-void afficherCarte2() {
 
     system("cls");
 
@@ -569,11 +513,11 @@ void changeurDelevel() {
     H.position_y = 5;
 
     // Replacer les ennemis
-    enemies[0] = { 'X', 2, 2, true };
-    enemies[1] = { 'X', 13, 2, true };
-    enemies[2] = { 'X', 11, 7, true };
-    enemies[3] = { 'X', 8, 8, true };
-    enemies[4] = { 'X', 16, 8, true };
+    enemies[0] = { 'X', 3, 2, true };
+    enemies[1] = { 'X', 14, 2, true };
+    enemies[2] = { 'X', 12, 7, true };
+    enemies[3] = { 'X', 9, 8, true };
+    enemies[4] = { 'X', 17, 8, true };
 }
 
 // ========================
@@ -596,7 +540,7 @@ void lancerJeu() {
             afficherCarte1();
         }
         else {
-            afficherCarte2();
+            afficherCarte1();
         }
 
         afficherInformations();
