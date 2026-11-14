@@ -16,6 +16,7 @@ struct Hero {
     int position_y;
     int vies;
     char direction;
+    char test;
 };
 
 struct Enemy {
